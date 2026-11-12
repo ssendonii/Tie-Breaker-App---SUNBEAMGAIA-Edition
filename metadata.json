@@ -1,0 +1,6 @@
+{
+  "name": "The Tie Breaker (SUNBEAMGAIA Edition)",
+  "description": "AI-driven decision intelligence with in-depth Pros & Cons, comparison tables, SWOT matrices, and dynamic weighted scoring to resolve tough dilemmas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
