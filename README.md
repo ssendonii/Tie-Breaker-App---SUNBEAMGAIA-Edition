@@ -27,6 +27,13 @@ An AI-powered decision intelligence application built to resolve complex persona
 
 ## Version History
 
+### v3.0.2 — 2026-11-12
+**Client-Side PDF Dossier Export, Page-Width Layout Fix & Edition Version Badge**
+- Replaced browser-blocked iframe `window.print()` calls with reliable multi-page client-side PDF dossier generation (`src/utils/pdfExport.ts` using `jspdf`), covering the Definitive Verdict, 48-Hour Protocol, Multi-Theory Calculus, Divergence Axes, Research & Paradox Reconciliation, Pros & Cons, and SWOT Matrix.
+- Added strict width-confined line wrapping (`wrapTextStrict`), line-by-line pagination, page footers, and WinAnsi character sanitization (`sanitizePdfText` translating symbols like `Δ`, `λ`, `≥`, `→`) so long sentences and unbroken tokens never trigger PDF font-encoding expansion or crop past the page margin.
+- Added instant confirmation toast feedback on PDF download and preserved native print dialog support when opened outside an iframe.
+- Updated the top-left header brand badge in `src/components/Header.tsx` to display `v3.02 SUNBEAMGAIA EDITION` and ensured `Print / PDF` remains accessible across screen sizes.
+
 ### v3.0.1 — 2026-11-12
 **Timeout Protection, Validated Fallback Routing & Safe Response Parsing**
 - Configured `ThinkingLevel.LOW` on Gemini generation calls in `server.ts` and added an 18s per-model timeout (`withTimeout`) so slow upstream responses fail over before hitting reverse-proxy gateway timeouts.

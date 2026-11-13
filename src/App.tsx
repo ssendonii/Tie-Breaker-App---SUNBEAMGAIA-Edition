@@ -8,7 +8,8 @@ import { PresetPickerModal } from './components/PresetPickerModal';
 import { SavedDecisionsModal } from './components/SavedDecisionsModal';
 import { CoinTossModal } from './components/CoinTossModal';
 import { ConsultationDrawer } from './components/ConsultationDrawer';
-import { AlertCircle, Sparkles, Sun, Shield, Scale } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Sparkles, Shield, Scale, X } from 'lucide-react';
+import { exportDecisionToPdf } from './utils/pdfExport';
 
 export default function App() {
   const [currentDecision, setCurrentDecision] = useState<DecisionAnalysisResult | null>(
@@ -16,6 +17,7 @@ export default function App() {
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pdfNotice, setPdfNotice] = useState<string | null>(null);
 
   // Modals & Drawers state
   const [isPresetsOpen, setIsPresetsOpen] = useState<boolean>(false);
@@ -42,6 +44,12 @@ export default function App() {
       console.error('Failed to save to localStorage:', e);
     }
   }, [savedList]);
+
+  useEffect(() => {
+    if (!pdfNotice) return;
+    const timer = window.setTimeout(() => setPdfNotice(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [pdfNotice]);
 
   // Form submission handler
   const handleAnalyzeDecision = async (formData: {
@@ -121,6 +129,23 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlePrintPdf = () => {
+    if (!currentDecision) return;
+    setErrorMessage(null);
+    try {
+      const fileName = exportDecisionToPdf(currentDecision);
+      setPdfNotice(`Exported PDF dossier: ${fileName}`);
+      if (window.self === window.top) {
+        window.print();
+      }
+    } catch (err: any) {
+      console.error('PDF export failure:', err);
+      setErrorMessage(
+        err?.message || 'Unable to generate PDF dossier. Please try again.'
+      );
+    }
+  };
+
   const isCurrentSaved = Boolean(
     currentDecision && savedList.some((item) => item.title === currentDecision.title)
   );
@@ -139,6 +164,7 @@ export default function App() {
         onOpenSaved={() => setIsSavedOpen(true)}
         onOpenCoinToss={() => setIsCoinTossOpen(true)}
         onNewDilemma={() => setCurrentDecision(null)}
+        onPrintPdf={handlePrintPdf}
         savedCount={savedList.length}
         hasActiveDecision={Boolean(currentDecision)}
       />
@@ -269,6 +295,24 @@ export default function App() {
           onClose={() => setIsConsultOpen(false)}
           decisionData={currentDecision}
         />
+      )}
+
+      {pdfNotice && (
+        <div
+          role="status"
+          className="fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl bg-gray-900 border border-emerald-500/40 text-emerald-200 text-xs shadow-xl flex items-center gap-3 no-print"
+        >
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="truncate">{pdfNotice}</span>
+          <button
+            type="button"
+            onClick={() => setPdfNotice(null)}
+            aria-label="Dismiss PDF export notification"
+            className="text-gray-400 hover:text-white shrink-0 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       )}
     </div>
   );

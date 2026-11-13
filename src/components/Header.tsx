@@ -6,6 +6,7 @@ interface HeaderProps {
   onOpenSaved: () => void;
   onOpenCoinToss: () => void;
   onNewDilemma: () => void;
+  onPrintPdf: () => void;
   savedCount: number;
   hasActiveDecision: boolean;
 }
@@ -15,68 +16,68 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSaved,
   onOpenCoinToss,
   onNewDilemma,
+  onPrintPdf,
   savedCount,
   hasActiveDecision,
 }) => {
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <header className="sticky top-0 z-40 w-full bg-gray-950/80 backdrop-blur-md border-b border-gray-800/80 no-print">
+    <header className="sticky top-0 z-40 w-full bg-gray-950/90 backdrop-blur-md border-b border-gray-800/80 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand identity */}
         <div
           onClick={onNewDilemma}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-3 cursor-pointer group min-w-0"
         >
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-400 to-emerald-500 p-0.5 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-400 to-emerald-500 p-0.5 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition shrink-0">
             <div className="w-full h-full bg-gray-950 rounded-[10px] flex items-center justify-center">
-              <Sun className="w-5 h-5 text-amber-400 animate-pulse" />
+              <Sun className="w-5 h-5 text-amber-400" />
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-bold text-white tracking-wide font-cinzel">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base font-bold text-white tracking-wide font-cinzel whitespace-nowrap shrink-0">
                 The Tie Breaker
               </h1>
-              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                SUNBEAMGAIA
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 whitespace-nowrap shrink-0">
+                v3.02 SUNBEAMGAIA EDITION
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 hidden sm:block">
+            <p className="text-[11px] text-gray-400 hidden sm:block truncate">
               Cognitive Decision Intelligence & Resolution Matrix
             </p>
           </div>
         </div>
 
         {/* Right utility buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {hasActiveDecision && (
             <>
               <button
+                type="button"
                 onClick={onNewDilemma}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-850 border border-gray-800 transition"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-850 border border-gray-800 transition whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <PlusCircle className="w-3.5 h-3.5 text-amber-400" />
                 New Choice
               </button>
 
               <button
-                onClick={handlePrint}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-850 border border-gray-800 transition"
-                title="Print or Save PDF"
+                type="button"
+                onClick={onPrintPdf}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-200 hover:text-amber-300 bg-gray-900 hover:bg-gray-850 border border-gray-800 transition whitespace-nowrap shrink-0 cursor-pointer"
+                title="Download PDF Dossier & Print"
               >
-                <Printer className="w-3.5 h-3.5" />
-                Print / PDF
+                <Printer className="w-3.5 h-3.5 text-amber-400" />
+                <span>Print / PDF</span>
               </button>
             </>
           )}
 
           <button
+            type="button"
             onClick={onOpenCoinToss}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-amber-300 bg-gray-900 hover:bg-gray-850 border border-gray-800 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-amber-300 bg-gray-900 hover:bg-gray-850 border border-gray-800 transition whitespace-nowrap shrink-0 cursor-pointer"
             title="Instant Coin Flip Gut Check"
           >
             <Coins className="w-3.5 h-3.5 text-amber-400" />
@@ -84,16 +85,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={onOpenPresets}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-amber-300 bg-gray-900 hover:bg-gray-850 border border-gray-800 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-amber-300 bg-gray-900 hover:bg-gray-850 border border-gray-800 transition whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Presets</span>
           </button>
 
           <button
+            type="button"
             onClick={onOpenSaved}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-850 border border-gray-800 transition relative"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 hover:text-white bg-gray-900 hover:bg-gray-850 border border-gray-800 transition relative whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Bookmark className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden sm:inline">Library</span>
