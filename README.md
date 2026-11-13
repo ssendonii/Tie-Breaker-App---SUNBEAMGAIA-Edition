@@ -27,12 +27,18 @@ An AI-powered decision intelligence application built to resolve complex persona
 
 ## Version History
 
+### v3.0.1 — 2026-11-12
+**Timeout Protection, Validated Fallback Routing & Safe Response Parsing**
+- Configured `ThinkingLevel.LOW` on Gemini generation calls in `server.ts` and added an 18s per-model timeout (`withTimeout`) so slow upstream responses fail over before hitting reverse-proxy gateway timeouts.
+- Updated fallback model routing from `gemini-flash-latest` (which returned `404`) to `gemini-3.1-flash-lite` and enabled failover on `404`/`NOT_FOUND` errors as well as `503`/`429`.
+- Updated `App.tsx` and `ConsultationDrawer.tsx` to read raw response text before parsing JSON so HTML gateway/proxy error pages (`<!doctype ...>`) surface clear, human-readable diagnostics instead of JSON syntax errors.
+
 ### v3.0.0 — 2026-11-12
 **Resilient Multi-Model Inference & Error Handling**
 - Added exponential-backoff retry logic (`generateWithRetryAndFallback`) in `server.ts` to handle transient `503 UNAVAILABLE` and `429 RESOURCE_EXHAUSTED` demand spikes.
-- Implemented automatic server-side model fallback chain (`gemini-3.8-flash` → `gemini-flash-latest` → `gemini-3.1-flash-lite`) for both dilemma analysis (`/api/decision/analyze`) and Oracle follow-up consultation (`/api/decision/consult`).
+- Implemented automatic server-side model fallback routing for both dilemma analysis (`/api/decision/analyze`) and Oracle follow-up consultation (`/api/decision/consult`).
 - Added `formatGeminiError` to translate raw upstream API errors into clear, human-readable HTTP status responses.
-- Added `README.md` version history documentation and aligned `package.json` version to `3.0.0`.
+- Added `README.md` version history documentation and aligned `package.json` version.
 
 ### v2.0.0 — 2026-11-12
 **Multi-Theory Decision Science & Paradox Engine**

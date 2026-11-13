@@ -56,8 +56,17 @@ export const ConsultationDrawer: React.FC<ConsultationDrawerProps> = ({
         }),
       });
 
-      const data = await res.json();
-      if (data.success && data.answer) {
+      const rawBody = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(rawBody);
+      } catch {
+        throw new Error(
+          `Oracle request interrupted or timed out (HTTP ${res.status}). Please try again.`
+        );
+      }
+
+      if (res.ok && data?.success && data?.answer) {
         setMessages((prev) => [
           ...prev,
           { sender: 'oracle', text: data.answer },
@@ -67,7 +76,7 @@ export const ConsultationDrawer: React.FC<ConsultationDrawerProps> = ({
           ...prev,
           {
             sender: 'oracle',
-            text: 'I could not synthesize an answer at this moment. Please check server connectivity.',
+            text: data?.error || 'I could not synthesize an answer at this moment. Please try again.',
           },
         ]);
       }

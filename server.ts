@@ -3,7 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
 
 dotenv.config();
 
@@ -26,7 +26,7 @@ function getGeminiClient() {
 }
 
 const PRIMARY_MODEL = 'gemini-3.8-flash';
-const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-3.1-flash-lite'];
+const FALLBACK_MODELS = ['gemini-3.1-flash-lite'];
 
 function isTransientHighDemandError(error: any): boolean {
   const status = error?.status ?? error?.error?.code;
@@ -37,8 +37,15 @@ function isTransientHighDemandError(error: any): boolean {
     msg.includes('"code":503') ||
     msg.includes('UNAVAILABLE') ||
     msg.includes('high demand') ||
-    msg.includes('RESOURCE_EXHAUSTED')
+    msg.includes('RESOURCE_EXHAUSTED') ||
+    msg.includes('timed out')
   );
+}
+
+function isModelUnavailableError(error: any): boolean {
+  const status = error?.status ?? error?.error?.code;
+  const msg = String(error?.message || '');
+  return status === 404 || msg.includes('NOT_FOUND') || msg.includes('is not found');
 }
 
 function formatGeminiError(error: any): { statusCode: number; message: string } {
@@ -47,13 +54,31 @@ function formatGeminiError(error: any): { statusCode: number; message: string } 
     return {
       statusCode: 503,
       message:
-        'The AI model is temporarily experiencing high demand across all fallback tiers. Please wait a few seconds and try again.',
+        'The AI model is temporarily experiencing high demand. Please wait a few seconds and try again.',
     };
   }
   return {
     statusCode: 500,
     message: rawMsg || 'Failed to synthesize decision analysis. Please try again.',
   };
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`));
+    }, ms);
+    promise.then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
 }
 
 async function generateWithRetryAndFallback(
@@ -65,28 +90,26 @@ async function generateWithRetryAndFallback(
   let lastError: any = null;
 
   for (const model of modelsToTry) {
-    const maxAttempts = model === PRIMARY_MODEL ? 2 : 1;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        return await ai.models.generateContent({
+    try {
+      const modelConfig = {
+        ...config,
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      };
+      return await withTimeout(
+        ai.models.generateContent({
           model,
           contents,
-          config,
-        });
-      } catch (err: any) {
-        lastError = err;
-        if (!isTransientHighDemandError(err)) {
-          throw err; // Non-transient error (e.g., invalid key or bad request), do not retry
-        }
-        console.warn(
-          `Transient demand error on model "${model}" (attempt ${attempt}/${maxAttempts}):`,
-          err?.message || err
-        );
-        if (attempt < maxAttempts) {
-          const delayMs = 900 * attempt;
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-        }
+          config: modelConfig,
+        }),
+        18000,
+        `Model ${model}`
+      );
+    } catch (err: any) {
+      lastError = err;
+      if (!isTransientHighDemandError(err) && !isModelUnavailableError(err)) {
+        throw err;
       }
+      console.warn(`Failover triggered from model "${model}":`, err?.message || err);
     }
   }
 

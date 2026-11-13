@@ -61,10 +61,23 @@ export default function App() {
         body: JSON.stringify(formData),
       });
 
-      const json = await res.json();
+      const rawBody = await res.text();
+      let json: any = null;
+      try {
+        json = JSON.parse(rawBody);
+      } catch {
+        // The upstream proxy/gateway returned an HTML page (e.g., 502/504 timeout or auth refresh)
+        const trimmed = rawBody.trim().toLowerCase();
+        if (trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+          throw new Error(
+            `The server connection was interrupted or timed out (HTTP ${res.status}). If you are using the shared preview URL, try refreshing the page or submitting again.`
+          );
+        }
+        throw new Error(`Received an unexpected non-JSON response (HTTP ${res.status}).`);
+      }
 
-      if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || 'Failed to synthesize decision analysis.');
+      if (!res.ok || !json?.success || !json?.data) {
+        throw new Error(json?.error || `Failed to synthesize decision analysis (HTTP ${res.status}).`);
       }
 
       setCurrentDecision(json.data);
